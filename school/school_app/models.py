@@ -8,7 +8,7 @@ import random, secrets
 class Subject(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название предмета')
     classes = models.ManyToManyField('SchoolClass',
-                                     related_name='SchoolClass',
+                                     related_name='subjects',
                                      blank=True,
                                      verbose_name='Классы, в которых преподается'
     )
@@ -26,7 +26,7 @@ class SchoolClass(models.Model):
 
     @property
     def name_class(self):
-        return f' {self.number_class}-{self.letter_class}'
+        return f'{self.number_class}-{self.letter_class}'
 
     def __str__(self):
         return self.name_class
@@ -65,35 +65,33 @@ class Teacher(models.Model):
                                 editable=False
     )
     def save(self, *args, **kwargs):
+
         if not self.teacher_id:
             self.teacher_id = self.generate_teacher_id()
 
         if not self.password:
             self.password = self.generate_password()
 
-        if not self.user:
-            self.user = self.create_user('Учитель', '')
-
         super().save(*args, **kwargs)
 
     def create_user(self, first_name, last_name):
-        user_name = f'teacher_{self.teacher_id}'
+        username = f'teacher_{self.teacher_id}'
 
         counter = 1
-        original_user_name = user_name
+        original_user_name = username
 
-        while User.objects.filter(username=user_name).exists():
-            user_name = f'{original_user_name}{self.teacher_id}'
+        while User.objects.filter(username=username).exists():
+            username = f'{original_user_name}_{counter}'
             counter += 1
 
-        user= User(user_name=user_name,
+        user= User.objects.create_user(
+                   username=username,
                    password=self.password,
                    first_name=first_name,
                    last_name=last_name,
                    is_active=True
         )
 
-        self.user = user
         return user
 
     def generate_teacher_id(self):

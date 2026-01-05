@@ -2,7 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Teacher, Subject
+from .models import Teacher, Subject, SchoolClass
 
 
 class TeacherAdminForm(forms.ModelForm):
@@ -24,7 +24,7 @@ class TeacherAdminForm(forms.ModelForm):
 
         if not teacher.user:
             teacher.save()
-            user = teacher.create_user_with_name(
+            user = teacher.create_user(
                 self.cleaned_data['first_name'],
                 self.cleaned_data['last_name']
             )
@@ -50,9 +50,10 @@ class TeacherInline(admin.StackedInline):
     readonly_fields = ['teacher_id', 'password']
 
 
-class TeacherAdmin(BaseUserAdmin):
+@admin.register(Teacher)
+class TeacherAdmin(admin.ModelAdmin):
     form = TeacherAdminForm
-    list_display = ['teacher_id', 'get_full_name', 'password', 'subjects_list', 'classes_list']
+    list_display = ['teacher_id', 'get_full_name', 'password']
     search_fields = ['teacher_id', 'user__first_name', 'user__last_name']
     readonly_fields = ['teacher_id', 'password', 'user']
     filter_horizontal = ['subjects', 'classes']
@@ -87,4 +88,38 @@ class UserAdmin(BaseUserAdmin):
                 return [TeacherInline(self.model, self.admin_site)]
         return []
 
-admin.site.unregister(User)
+
+class SubjectAdminForm(forms.ModelForm):
+    class Meta:
+        model = Subject
+        fields = '__all__'
+
+
+@admin.register(Subject)
+class SubjectAdmin(admin.ModelAdmin):
+    form = SubjectAdminForm
+    list_display = ['name', 'get_teacher_count']
+    search_fields = ['name']
+    filter_horizontal = ['classes']
+
+    def get_teacher_count(self, obj):
+        return obj.teachers.count()
+
+    get_teacher_count.short_description = 'Учителя'
+
+
+@admin.register(SchoolClass)
+class SchoolClassAdmin(admin.ModelAdmin):
+    list_display = ['number_class', 'letter_class', 'full_name', 'get_subject_count']
+    list_filter = ['number_class']
+    search_fields = ['number_class', 'letter_class']
+
+    def full_name(self, obj):
+        return f'{obj.number_class} {obj.letter_class}'
+
+    full_name.short_description = 'Класс'
+
+    def get_subject_count(self, obj):
+        return obj.subjects.count()
+
+    get_subject_count.short_description = 'Предметы'
