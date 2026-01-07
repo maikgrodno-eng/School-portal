@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 import random, secrets
 from datetime import datetime
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Subject(models.Model):
@@ -284,3 +285,20 @@ class Parent(models.Model):
     class Meta:
         verbose_name = "Родитель"
         verbose_name_plural = "Родители"
+
+
+class Grade(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name="Ученик")
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, verbose_name="Предмет")
+    grade = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)],  # Изменено на 1-10
+        verbose_name="Оценка"
+    )
+    date = models.DateField(verbose_name="Дата оценки")
+
+    def __str__(self):
+        return f"{self.student} - {self.subject}: {self.grade}"
+
+    class Meta:
+        verbose_name = "Оценка"
+        verbose_name_plural = "Оценки"
