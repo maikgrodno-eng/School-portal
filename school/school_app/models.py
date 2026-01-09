@@ -121,7 +121,7 @@ class Student(models.Model):
     user = models.OneToOneField(User,
                                 on_delete=models.CASCADE,
                                 verbose_name='Пользователь',
-                                related_name='student',
+                                related_name='student_profile',
                                 null=True,
                                 blank=True
     )

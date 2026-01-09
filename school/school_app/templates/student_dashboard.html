@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}Личный кабинет ученика{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Мой профиль</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>ФИО:</strong> {{ user.last_name }} {{ user.first_name }}</p>
+                <p><strong>ID ученика:</strong> {{ student.student_id }}</p>
+                {% if student.class_field %}
+                    <p><strong>Класс:</strong> {{ student.class_field.full_name }}</p>
+                {% endif %}
+                {% if subjects_grades_data %}
+                    <p><strong>Всего оценок:</strong> {{ total_grades_count }}</p>
+                    <p><strong>Средний балл:</strong>
+                        <span class="badge bg-primary fs-6">{{ average_grade|floatformat:2 }}/10</span>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Мои оценки</h5>
+                {% if subjects_grades_data %}
+                    <span class="badge bg-primary">
+                        Всего: {{ total_grades_count }} оценок
+                    </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if subjects_grades_data %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35%">Предмет</th>
+                                    <th style="width: 45%">Оценки</th>
+                                    <th style="width: 20%" class="text-center">Средняя</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject_data in subjects_grades_data %}
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            {{ subject_data.subject.name }}
+                                        </td>
+                                        <td>
+                                            {% for grade in subject_data.grades %}
+                                            <span class="grade-badge me-1 mb-1"
+                                                  data-bs-toggle="tooltip"
+                                                  title="{{ grade.date|date:'d.m.Y' }}"
+                                                  data-grade="{{ grade.grade }}">
+                                                {{ grade.grade }}
+                                            </span>
+                                            {% endfor %}
+                                            <small class="text-muted ms-2">
+                                                ({{ subject_data.grades|length }})
+                                            </small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge average-badge
+                                                {% if subject_data.average >= 9 %}bg-success
+                                                {% elif subject_data.average >= 7 %}bg-primary
+                                                {% elif subject_data.average >= 5 %}bg-info
+                                                {% elif subject_data.average >= 3 %}bg-warning text-dark
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ subject_data.average|floatformat:2 }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th class="text-end" colspan="2">Общий средний балл:</th>
+                                    <td class="text-center">
+                                        <span class="badge bg-dark fs-6">
+                                            {{ average_grade|floatformat:2 }}/10
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Статистика успеваемости -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Статистика оценок:</h6>
+                                    <div class="row text-center">
+                                        <div class="col-md-2">
+                                            <div class="display-6 text-success">{{ grade_stats.10|default:0 }}</div>
+                                            <p class="text-muted">10</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="display-6 text-primary">{{ grade_stats.9|default:0 }}</div>
+                                            <p class="text-muted">9</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="display-6 text-info">{{ grade_stats.8|default:0 }}</div>
+                                            <p class="text-muted">8</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="display-6 text-warning">{{ grade_stats.7|default:0 }}</div>
+                                            <p class="text-muted">7</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="display-6 text-orange">{{ grade_stats.6|default:0 }}</div>
+                                            <p class="text-muted">6</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="display-6 text-danger">{{ grade_stats.5|default:0 }}</div>
+                                            <p class="text-muted">≤5</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-clipboard-x text-muted" style="font-size: 3rem;"></i>
+                        <p class="mt-2 text-muted">Оценки пока отсутствуют</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Стили для бейджей оценок */
+.grade-badge {
+    display: inline-block;
+    min-width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 0 5px;
+}
+
+.grade-badge:hover {
+    transform: scale(1.1);
+}
+
+/* Цвета для 10-балльной системы */
+.grade-badge[data-grade="10"] {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.grade-badge[data-grade="9"] {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+}
+
+.grade-badge[data-grade="8"] {
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+}
+
+.grade-badge[data-grade="7"] {
+    background: linear-gradient(135deg, #198754, #20c997);
+}
+
+.grade-badge[data-grade="6"] {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #212529;
+}
+
+.grade-badge[data-grade="5"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="4"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="3"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="2"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="1"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+/* Стили для средних оценок */
+.average-badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 70px;
+}
+
+/* Стили для таблицы */
+.table th {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+.table tr:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table tfoot {
+    font-weight: 600;
+}
+
+.display-6 {
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.text-orange {
+    color: #fd7e14 !important;
+}
+
+/* Градиенты для цветов средних оценок */
+.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #0dcaf0, #6f42c1) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+}
+</style>
+
+<script>
+// Инициализация тултипов
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+</script>
+{% endblock %}

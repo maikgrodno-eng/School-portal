@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}Личный кабинет родителя{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Мой профиль</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>ФИО:</strong> {{ user.last_name }} {{ user.first_name }}</p>
+                <p><strong>ID родителя:</strong> {{ parent.parent_id }}</p>
+                <p><strong>Количество детей:</strong> {{ children|length }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Мои дети</h5>
+            </div>
+            <div class="card-body">
+                {% if children_with_grades %}
+                    <div class="accordion" id="childrenAccordion">
+                        {% for child_data in children_with_grades %}
+                            {% with child=child_data.child grades=child_data.grades %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ child.id }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapse{{ child.id }}">
+                                        {{ child.user.last_name }} {{ child.user.first_name }}
+                                        {% if child.class_field %}
+                                            <span class="ms-2 badge bg-secondary">{{ child.class_field.full_name }}</span>
+                                        {% endif %}
+                                        <span class="ms-2 badge bg-info">{{ grades|length }} оценок</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ child.id }}" class="accordion-collapse collapse"
+                                     data-bs-parent="#childrenAccordion">
+                                    <div class="accordion-body">
+                                        {% if grades %}
+                                            {% regroup grades|dictsort:"subject.name" by subject as subject_list %}
+                                            <div class="table-responsive">
+                                                <table class="table table-sm align-middle">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th style="width: 35%">Предмет</th>
+                                                            <th style="width: 50%">Оценки</th>
+                                                            <th style="width: 15%" class="text-center">Средняя</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for subject in subject_list %}
+                                                        <tr data-subject-id="{{ forloop.counter }}">
+                                                            <td class="fw-semibold">
+                                                                {{ subject.grouper.name }}
+                                                            </td>
+                                                            <td>
+                                                                {% for grade in subject.list|dictsort:"date" %}
+                                                                <span class="grade-badge me-1 mb-1"
+                                                                      data-bs-toggle="tooltip"
+                                                                      title="{{ grade.date|date:'d.m.Y' }}"
+                                                                      data-grade="{{ grade.grade }}"
+                                                                      data-subject="{{ forloop.parentloop.counter }}">
+                                                                    {{ grade.grade }}
+                                                                </span>
+                                                                {% endfor %}
+                                                                <small class="text-muted ms-2">
+                                                                    ({{ subject.list|length }})
+                                                                </small>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span class="badge average-badge average-{{ forloop.counter }}">
+                                                                    -
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {% else %}
+                                            <div class="text-center py-4">
+                                                <i class="bi bi-clipboard-x text-muted" style="font-size: 3rem;"></i>
+                                                <p class="mt-2 text-muted">Нет оценок</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                        <p class="mt-2 text-muted">Дети не добавлены в систему</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Стили для бейджей оценок */
+.grade-badge {
+    display: inline-block;
+    min-width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 0 5px;
+}
+
+.grade-badge:hover {
+    transform: scale(1.1);
+}
+
+/* Цвета для 10-балльной системы */
+.grade-badge[data-grade="10"] {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.grade-badge[data-grade="9"] {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+}
+
+.grade-badge[data-grade="8"] {
+    background: linear-gradient(135deg, #6f42c1, #6610f2);
+}
+
+.grade-badge[data-grade="7"] {
+    background: linear-gradient(135deg, #198754, #20c997);
+}
+
+.grade-badge[data-grade="6"] {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #212529;
+}
+
+.grade-badge[data-grade="5"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="4"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="3"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="2"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.grade-badge[data-grade="1"] {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+/* Стили для средних оценок */
+.average-badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 70px;
+}
+
+/* Стили для таблицы */
+.table th {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+.table tr:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Анимация аккордеона */
+.accordion-button {
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+}
+
+/* Градиенты для цветов средних оценок */
+.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #0dcaf0, #6f42c1) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+}
+</style>
+
+<script>
+// Инициализация тултипов и расчет средних баллов
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация тултипов
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    // Расчет средних баллов для каждого предмета
+    var subjects = {};
+
+    // Собираем все оценки по предметам
+    document.querySelectorAll('.grade-badge').forEach(function(badge) {
+        var subjectId = badge.getAttribute('data-subject');
+        var grade = parseInt(badge.getAttribute('data-grade'));
+
+        if (!subjects[subjectId]) {
+            subjects[subjectId] = [];
+        }
+        subjects[subjectId].push(grade);
+    });
+
+    // Вычисляем средние и обновляем бейджи
+    for (var subjectId in subjects) {
+        if (subjects.hasOwnProperty(subjectId)) {
+            var grades = subjects[subjectId];
+            var sum = grades.reduce(function(a, b) { return a + b; }, 0);
+            var average = sum / grades.length;
+
+            var badge = document.querySelector('.average-' + subjectId);
+            if (badge) {
+                badge.textContent = average.toFixed(2);
+
+                // Устанавливаем цвет в зависимости от среднего балла
+                if (average >= 9) {
+                    badge.classList.add('bg-success');
+                } else if (average >= 7) {
+                    badge.classList.add('bg-primary');
+                } else if (average >= 5) {
+                    badge.classList.add('bg-info');
+                } else if (average >= 3) {
+                    badge.classList.add('bg-warning');
+                } else {
+                    badge.classList.add('bg-danger');
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
