@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib import messages
 from .models import Teacher, Student, Subject, Grade, Parent
 from .forms import LoginForm
-from datetime import date
+from datetime import date, datetime
 from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
@@ -67,7 +67,7 @@ def user_logout(request):
 def teacher_dashboard(request):
 
     try:
-        teacher = request.user.teacher
+        teacher = request.user.teacher_profile
     except Teacher.DoesNotExist:
         return redirect('home')
 
@@ -87,12 +87,13 @@ def teacher_dashboard(request):
 def add_grade(request):
 
     try:
-        teacher = request.user.teacher
+        teacher = request.user.teacher_profile
     except Teacher.DoesNotExist:
         return redirect('home')
 
-    students_in_classes = Student.objects.filter(class_field__in=teacher.classes.all()).select_related('user',
-                                                                                                       'class_field')
+    students_in_classes = Student.objects.filter(
+        class_field__in=teacher.classes.all()).select_related('user','class_field')
+
     students_by_class = defaultdict(list)
 
     for student in students_in_classes:
@@ -108,27 +109,56 @@ def add_grade(request):
         try:
             student = Student.objects.get(id=student_id)
             subject = Subject.objects.get(id=subject_id)
-
             grade_int = int(grade_value)
+
             if grade_int < 1 or grade_int > 10:
                 messages.error(request, 'Оценка должна быть от 1 до 10')
+
                 return redirect('add_grade')
 
-            if (subject in teacher.subjects.all() and
+            if  not (subject in teacher.subjects.all() and
                     student.class_field in teacher.classes.all()):
+                messages.error(request, '❌ Нет прав')
 
-                Grade.objects.create(
-                    student=student,
-                    subject=subject,
-                    grade=grade_value,
-                    date=date_str
-                )
-                messages.success(request,
-                                 f'✅ Оценка {grade_value} по предмету "{subject.name}" успешно добавлена ученику {student.user.last_name} {student.user.first_name}'
-                                 )
                 return redirect('add_grade')
-            else:
-                messages.error(request, '❌ У вас нет прав на добавление оценки по этому предмету или для этого класса')
+
+            if not subject.classes.filter(id=student.class_field.id).exists():
+                messages.error(request,
+                               f'❌ Предмет "{subject.name}" не преподается в классе {student.class_field.name_class}')
+                return redirect('add_grade')
+
+            existing_grade = Grade.objects.filter(
+                student=student,
+                subject=subject,
+                date=date_str,
+            ).exists()
+
+            grade_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+            day_of_week = grade_date.weekday()
+
+            if day_of_week == 5 or day_of_week==6:
+                messages.error(request,
+                               f'❌ Нельзя поставить оценку ({grade_date.strftime("%d.%m.%Y")}) - это выходной день'
+                               )
+                return redirect('add_grade')
+
+            if existing_grade:
+                messages.error(request, f'❌ У этого ученика уже есть оценка по предмету "{subject.name}" на {date_str}.'
+                                        f'Используйте другую дату.')
+                return redirect('add_grade')
+
+            Grade.objects.create(
+                student=student,
+                subject=subject,
+                grade=grade_value,
+                date=date_str
+            )
+            messages.success(request,
+            f'✅ Оценка {grade_value} по предмету "{subject.name}" успешно добавлена ученику {student.user.last_name} {student.user.first_name}'
+            )
+            return redirect('add_grade')
+
 
         except ValueError:
             messages.error(request, '❌ Оценка должна быть числом от 1 до 10')

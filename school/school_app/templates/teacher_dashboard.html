@@ -68,12 +68,6 @@
                                                         <strong>{{ student.user.last_name }} {{ student.user.first_name }}</strong>
                                                         <small class="text-muted ms-2">ID: {{ student.student_id }}</small>
                                                     </div>
-                                                    <div>
-                                                        <a href="{% url 'add_grade' %}?student_id={{ student.id }}"
-                                                           class="btn btn-sm btn-outline-primary">
-                                                            Добавить оценку
-                                                        </a>
-                                                    </div>
                                                 </div>
                                                 {% endfor %}
                                             </div>
