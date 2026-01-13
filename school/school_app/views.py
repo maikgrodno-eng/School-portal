@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib import messages
 from .models import Teacher, Student, Subject, Grade, Parent
@@ -143,6 +143,24 @@ def add_grade(request):
                                )
                 return redirect('add_grade')
 
+            holidays_2025_2026 = [
+                date(2025, 11, 7),
+                date(2025, 12, 25),
+                date(2026, 1, 1),
+                date(2026, 1, 2),
+                date(2026, 1, 7),
+                date(2026, 3, 8),
+                date(2026, 5, 1),
+                date(2026, 5, 9),
+            ]
+
+            if grade_date in holidays_2025_2026:
+
+                messages.error(request,
+                               f'❌ Нельзя поставить оценку ({grade_date.strftime("%d.%m.%Y")}) - праздничный день'
+                               )
+                return redirect('add_grade')
+
             if existing_grade:
                 messages.error(request, f'❌ У этого ученика уже есть оценка по предмету "{subject.name}" на {date_str}.'
                                         f'Используйте другую дату.')
@@ -266,3 +284,38 @@ def parent_dashboard(request):
         'children_with_grades': children_with_grades,
     }
     return render(request, 'parent_dashboard.html', context)
+
+
+@login_required
+def student_grades_view(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    grades = Grade.objects.filter(student=student).select_related('subject')
+
+    subjects_grades = {}
+    total_grades_count = 0
+    total_grades_sum = 0
+
+    for grade in grades:
+        if grade.subject not in subjects_grades:
+            subjects_grades[grade.subject] = []
+        subjects_grades[grade.subject].append(grade)
+        total_grades_count += 1
+        total_grades_sum += grade.grade
+
+    subject_averages = {}
+    for subject, grade_list in subjects_grades.items():
+        subject_sum = sum(grade.grade for grade in grade_list)
+        subject_averages[subject.id] = round(subject_sum / len(grade_list), 2)
+
+    average_grade = round(total_grades_sum / total_grades_count, 2) if total_grades_count > 0 else 0
+
+    context = {
+        'student': student,
+        'subjects_grades': subjects_grades,
+        'grades': grades,
+        'subject_averages': subject_averages,
+        'average_grade': average_grade,
+        'total_grades_count': total_grades_count,
+    }
+
+    return render(request, 'student_grades_view.html', context)

@@ -9,5 +9,6 @@ urlpatterns = [
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
     path('teacher/add-grade/', views.add_grade, name='add_grade'),
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
-    path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard')
+    path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
+    path('grades/student/<int:student_id>/', views.student_grades_view, name='student_grades_view')
 ]

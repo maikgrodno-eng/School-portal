@@ -64,7 +64,7 @@
                                                                       data-bs-toggle="tooltip"
                                                                       title="{{ grade.date|date:'d.m.Y' }}"
                                                                       data-grade="{{ grade.grade }}"
-                                                                      data-subject="{{ forloop.parentloop.counter }}">
+                                                                      data-subject="{{ child.id }}_{{ subject.grouper.id }}_{{ forloop.parentloop.counter }}">
                                                                     {{ grade.grade }}
                                                                 </span>
                                                                 {% endfor %}
@@ -73,7 +73,7 @@
                                                                 </small>
                                                             </td>
                                                             <td class="text-center">
-                                                                <span class="badge average-badge average-{{ forloop.counter }}">
+                                                                <span class="badge average-badge average-{{ child.id }}_{{ subject.grouper.id }}_{{ forloop.counter }}">
                                                                     -
                                                                 </span>
                                                             </td>

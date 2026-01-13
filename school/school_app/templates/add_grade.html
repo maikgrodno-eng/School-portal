@@ -13,7 +13,7 @@
                 {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                            {{ message }}
+                            <strong>{{ message }}</strong>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     {% endfor %}
@@ -25,20 +25,25 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Ученик *</label>
-                            <select name="student" class="form-select" required>
-                                <option value="">Выберите ученика</option>
-                                {% for class, students in students_by_class.items %}
-                                    <optgroup label="Класс {{ class.number_class }}-{{ class.letter_class }}">
-                                        {% for student in students %}
-                                            <option value="{{ student.id }}">
-                                                {{ student.user.last_name }} {{ student.user.first_name }}
-                                            </option>
-                                        {% endfor %}
-                                    </optgroup>
-                                {% empty %}
-                                    <option value="">Нет доступных учеников</option>
-                                {% endfor %}
-                            </select>
+                            <div class="input-group">
+                                <select name="student" id="studentSelect" class="form-select" required>
+                                    <option value="">Выберите ученика</option>
+                                    {% for class, students in students_by_class.items %}
+                                        <optgroup label="Класс {{ class.number_class }}-{{ class.letter_class }}">
+                                            {% for student in students %}
+                                                <option value="{{ student.id }}">
+                                                    {{ student.user.last_name }} {{ student.user.first_name }}
+                                                </option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% empty %}
+                                        <option value="">Нет доступных учеников</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" id="viewGradesBtn" class="btn btn-outline-info" disabled>
+                                    <i class="bi bi-eye me-1"></i> Оценки
+                                </button>
+                            </div>
                             <small class="text-muted">
                                 {% for class, students in students_by_class.items %}
                                     В классе {{ class.number_class }}-{{ class.letter_class }}: {{ students|length }} учеников<br>
@@ -62,7 +67,6 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Оценка * (1 - 10)</label>
-
                             <select name="grade" class="form-select" required>
                                 <option value="">Выберите оценку</option>
                                 <option value="10">10 (Отлично)</option>
@@ -76,7 +80,6 @@
                                 <option value="2">2 (Неудовлетворительно)</option>
                                 <option value="1">1 (Неудовлетворительно)</option>
                             </select>
-
                         </div>
 
                         <div class="col-md-4">
@@ -128,4 +131,34 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const studentSelect = document.getElementById('studentSelect');
+    const viewGradesBtn = document.getElementById('viewGradesBtn');
+
+    // Обработчик изменения выбора ученика
+    studentSelect.addEventListener('change', function() {
+        if (this.value) {
+            // Активируем кнопку просмотра оценок
+            viewGradesBtn.disabled = false;
+            // Сохраняем ID ученика для использования в URL
+            viewGradesBtn.dataset.studentId = this.value;
+        } else {
+            // Деактивируем кнопку
+            viewGradesBtn.disabled = true;
+            delete viewGradesBtn.dataset.studentId;
+        }
+    });
+
+    // Обработчик клика по кнопке "Просмотреть оценки"
+    viewGradesBtn.addEventListener('click', function() {
+        if (!this.disabled && this.dataset.studentId) {
+            const studentId = this.dataset.studentId;
+            // Переходим на страницу с оценками ученика в текущей вкладке
+            window.location.href = `/grades/student/${studentId}/`;
+        }
+    });
+});
+</script>
 {% endblock %}
