@@ -5,8 +5,8 @@ from .models import Teacher, Subject, SchoolClass, Student, Parent
 
 
 class TeacherAdminForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=30, required=True ,label='Имя')
-    last_name = forms.CharField(max_length=30, required=True ,label='Фамилия')
+    first_name = forms.CharField(max_length=30, required=True, label='Имя')
+    last_name = forms.CharField(max_length=30, required=True, label='Фамилия')
 
     class Meta:
         model = Teacher
@@ -82,7 +82,7 @@ class UserAdmin(BaseUserAdmin):
     inlines = [TeacherInline]
 
     def get_inline_instances(self, request, obj=None):
-        if  obj:
+        if obj:
             if hasattr(obj, 'teacher_profile'):
                 return [TeacherInline(self.model, self.admin_site)]
         return []
@@ -124,10 +124,9 @@ class SchoolClassAdmin(admin.ModelAdmin):
     get_subject_count.short_description = 'Предметы'
 
 
-
 class StudentAdminForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=30, required=True ,label='Имя')
-    last_name = forms.CharField(max_length=30, required=True ,label='Фамилия')
+    first_name = forms.CharField(max_length=30, required=True, label='Имя')
+    last_name = forms.CharField(max_length=30, required=True, label='Фамилия')
 
     class Meta:
         model = Student
@@ -142,16 +141,15 @@ class StudentAdminForm(forms.ModelForm):
     def save(self, commit=True):
         student = super().save(commit=False)
 
-        # Создаем или обновляем пользователя
         if not student.user:
-            student.save()  # Сначала сохраняем, чтобы сгенерировались ID и пароль
+            student.save()
             user = student.create_user_with_name(
                 self.cleaned_data['first_name'],
                 self.cleaned_data['last_name']
             )
             student.user = user
         else:
-            # Обновляем существующего пользователя
+
             student.user.first_name = self.cleaned_data['first_name']
             student.user.last_name = self.cleaned_data['last_name']
             student.user.save()
@@ -215,14 +213,15 @@ class ParentAdminForm(forms.ModelForm):
         parent = super().save(commit=False)
 
         if not parent.user:
-            parent.save()  # Сначала сохраняем, чтобы сгенерировались ID и пароль
+
+            parent.save()
             user = parent.create_user_with_name(
                 self.cleaned_data['first_name'],
                 self.cleaned_data['last_name']
             )
             parent.user = user
         else:
-            # Обновляем существующего пользователя
+
             parent.user.first_name = self.cleaned_data['first_name']
             parent.user.last_name = self.cleaned_data['last_name']
             parent.user.save()

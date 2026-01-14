@@ -160,17 +160,15 @@ class Student(models.Model):
         super().save(*args, **kwargs)
 
     def create_user_with_name(self, first_name, last_name):
-        """Создает пользователя с указанным именем и фамилией"""
+
         username = f"student_{self.student_id}"
 
-        # Проверяем уникальность
         counter = 1
         original_username = username
         while User.objects.filter(username=username).exists():
             username = f"{original_username}{counter}"
             counter += 1
 
-        # Создаем пользователя
         user = User.objects.create_user(
             username=username,
             password=self.password,
@@ -183,8 +181,8 @@ class Student(models.Model):
         return user
 
     def generate_student_id(self):
-        """Генерация уникального ID ученика"""
-        year = str(datetime.now().year)[2:]  # Берем последние 2 цифры года
+
+        year = str(datetime.now().year)[2:]
         while True:
             number = str(random.randint(1000, 9999))
             student_id = f"{year}{number}"
@@ -192,7 +190,7 @@ class Student(models.Model):
                 return student_id
 
     def generate_password(self):
-        """Генерация пароля из 6 цифр"""
+
         return ''.join(secrets.choice(string.digits) for _ in range(6))
 
     def __str__(self):
@@ -237,14 +235,14 @@ class Parent(models.Model):
         if not self.password:
             self.password = self.generate_password()
 
-        # Создаем пользователя при сохранении
+
         if not self.user:
             self.create_user_with_name("Родитель", "")
 
         super().save(*args, **kwargs)
 
     def create_user_with_name(self, first_name, last_name):
-        """Создает пользователя с указанным именем и фамилией"""
+
         username = f"parent_{self.parent_id}"
 
         counter = 1
@@ -265,16 +263,16 @@ class Parent(models.Model):
         return user
 
     def generate_parent_id(self):
-        """Генерация уникального ID родителя"""
+
         year = str(datetime.now().year)[2:]
         while True:
             number = str(random.randint(1000, 9999))
-            parent_id = f"P{number}{year}"  # Добавляем P в начале для родителя
+            parent_id = f"P{number}{year}"
             if not Parent.objects.filter(parent_id=parent_id).exists():
                 return parent_id
 
     def generate_password(self):
-        """Генерация пароля из 6 цифр"""
+
         return ''.join(secrets.choice(string.digits) for _ in range(6))
 
     def __str__(self):

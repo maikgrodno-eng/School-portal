@@ -10,11 +10,10 @@ from django.db.models import Avg
 
 
 def home(request):
-
     return render(request, 'home.html')
 
-def user_login(request):
 
+def user_login(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -39,7 +38,6 @@ def user_login(request):
             except Student.DoesNotExist:
                 pass
 
-
             try:
                 parent = Parent.objects.get(parent_id=user_id, password=password)
                 user = parent.user
@@ -56,8 +54,8 @@ def user_login(request):
 
     return render(request, 'login.html', {'form': form})
 
+
 def user_logout(request):
-    
     logout(request)
     messages.success(request, 'Вы успешно вышли из системы')
     return redirect('home')
@@ -65,7 +63,6 @@ def user_logout(request):
 
 @login_required
 def teacher_dashboard(request):
-
     try:
         teacher = request.user.teacher_profile
     except Teacher.DoesNotExist:
@@ -82,17 +79,15 @@ def teacher_dashboard(request):
     return render(request, 'teacher_dashboard.html', context)
 
 
-
 @login_required
 def add_grade(request):
-
     try:
         teacher = request.user.teacher_profile
     except Teacher.DoesNotExist:
         return redirect('home')
 
     students_in_classes = Student.objects.filter(
-        class_field__in=teacher.classes.all()).select_related('user','class_field')
+        class_field__in=teacher.classes.all()).select_related('user', 'class_field')
 
     students_by_class = defaultdict(list)
 
@@ -116,7 +111,7 @@ def add_grade(request):
 
                 return redirect('add_grade')
 
-            if  not (subject in teacher.subjects.all() and
+            if not (subject in teacher.subjects.all() and
                     student.class_field in teacher.classes.all()):
                 messages.error(request, '❌ Нет прав')
 
@@ -137,7 +132,7 @@ def add_grade(request):
 
             day_of_week = grade_date.weekday()
 
-            if day_of_week == 5 or day_of_week==6:
+            if day_of_week == 5 or day_of_week == 6:
                 messages.error(request,
                                f'❌ Нельзя поставить оценку ({grade_date.strftime("%d.%m.%Y")}) - это выходной день'
                                )
@@ -155,7 +150,6 @@ def add_grade(request):
             ]
 
             if grade_date in holidays_2025_2026:
-
                 messages.error(request,
                                f'❌ Нельзя поставить оценку ({grade_date.strftime("%d.%m.%Y")}) - праздничный день'
                                )
@@ -173,8 +167,8 @@ def add_grade(request):
                 date=date_str
             )
             messages.success(request,
-            f'✅ Оценка {grade_value} по предмету "{subject.name}" успешно добавлена ученику {student.user.last_name} {student.user.first_name}'
-            )
+                             f'✅ Оценка {grade_value} по предмету "{subject.name}" успешно добавлена ученику {student.user.last_name} {student.user.first_name}'
+                             )
             return redirect('add_grade')
 
 
@@ -198,7 +192,6 @@ def add_grade(request):
 
 @login_required
 def student_dashboard(request):
-
     try:
         student = request.user.student_profile
     except Student.DoesNotExist:
@@ -249,7 +242,6 @@ def student_dashboard(request):
 
 @login_required
 def parent_dashboard(request):
-
     try:
         parent = request.user.parent_profile
     except Parent.DoesNotExist:

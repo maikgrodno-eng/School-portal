@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Заголовок с информацией об ученике -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -17,7 +16,6 @@
                             </h4>
                         </div>
                         <div>
-                            <!-- ТОЛЬКО ОДНА кнопка Назад -->
                             <a href="{% url 'add_grade' %}" class="btn btn-outline-primary">
                                 <i class="bi bi-arrow-left me-1"></i> Назад
                             </a>
@@ -48,7 +46,6 @@
         </div>
     </div>
 
-    <!-- Основная таблица оценок -->
     <div class="row">
         <div class="col-12">
             <div class="card">
